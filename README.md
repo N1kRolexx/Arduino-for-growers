@@ -10,11 +10,11 @@ Also, similar controllers, whilst not having same functionality, are pretty expe
 
 ---
 ## Key features
-- Telegram bot with nice menu, which allows full control over your growing environment.
+- Telegram bot with nice keyboards, which allows full control over your growing environment.
 - Measuring temperature/humidity and showing on LCD display inside grow space or sending to you via Telegram.
 - Automatic climate control allows to set temperature and humidity levels, which Arduino will try to keep to during different stages of growing.
-- Automatic 18/6 or manual light schedule for your plants.
-- All adjustments are done through Telegram bot menu.
+- Automatic 18/6 light schedule for your plants. Can be changed in Arduino sketch (or via telegram - coming soon)
+- All adjustments are done through Telegram bot menu and handy keyboards.
 
 ## What you will need
 ### Hardware
@@ -30,7 +30,7 @@ Also, similar controllers, whilst not having same functionality, are pretty expe
 - 10kOhm resistor and 10μf capacitor 
 
 ### Software
-- Python 2.7 (Comes preinstalled on Raspbian)
+- Python 3.8
 - Telepot - telegram bot library for python (https://github.com/nickoala/telepot)
 - PySerial - serial port access library for python (https://github.com/pyserial/pyserial)
 
@@ -44,11 +44,12 @@ pip install telepot
 ## Usage
 To start bot in the background and suppress output:
 ```bash
-sudo nohup python bot.py &
+sudo nohup python growbot-v2.py &
 ```
 ----
 ## Upcoming features & Plans
 - Soil moisture measurements & Automatic watering.
+- Smiles in bot's menu and keyboards.
 - CO2 measurements inside grow space.
 - Motion Sensor to detect movement near growbox.
 - RFID card access to your growing area.
