@@ -34,7 +34,7 @@ tip_msg += "led on, led off, fan on, fan off, fan sleep, alarm, backlight, get f
 tip_msg += "ledon, ledoff; followed by colon and a number for that setter. For example \"maxtemp:27\" will set maximal temperature to 27 and arduino will try to keep it."
 
 MainMenuKeyboard = ReplyKeyboardMarkup(one_time_keyboard=True, keyboard=[
-                [u'\U0001f321' + ' Get info'],
+                [u'\U0001f321' + ' Get info', u'\u2600' + 'Lighting schedule'],
                 [u'\U0001f326' + ' Climate control', u'\u26fa' + ' Facility operation'] ])
 
 climateKeyb = InlineKeyboardMarkup(inline_keyboard=[
@@ -52,6 +52,11 @@ facilityKeyb = InlineKeyboardMarkup(inline_keyboard=[
                  [InlineKeyboardButton(text='Main menu', callback_data='main menu')]
                 ])
 
+lightingKeyb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text='Change schedule' + u'\U0001f317', callback_data='changeSchedule')],
+                [InlineKeyboardButton(text='Main menu', callback_data='main menu')],
+])
+
 tempKeyb = ReplyKeyboardMarkup(one_time_keyboard=True, keyboard=[
                 ['17', '18', '19', '20', '21', '22'],
                 ['23', '24', '25', '26', '27', '28']
@@ -64,12 +69,19 @@ sensorKeyb = ReplyKeyboardMarkup(one_time_keyboard=True, keyboard=[
                 ['3', '5', '10', '15', '30'],
                 ['60', '300', '600', '1800']
                 ])
+lightingSchedKeyb = ReplyKeyboardMarkup(one_time_keyboard=True, keyboard=[
+                ['6-24', '8-2', '10-4', '12-6'],            # 18h period
+                ['6-22', '8-24', '10-2', '12-4'],           # 16h period
+                ['6-20', '8-22', '10-24', '12-2'],          # 14h period
+                ['6-18', '8-20', '10-22', '12-24']          # 12h period
+                ])
 
-commandsList = [ 'led on', 'led off', 'fan on', 'fan off', 'fan sleep', 'alarm',    # commands, which are understood by arduino, so can be sent directly to it
-                 'backlight', 'get fan sleep', 'get climate', 'get sensor',]
+commandsList = [ 'led on', 'led off', 'fan on', 'fan off', 'fan sleep', 'alarm',                # commands, which are understood by arduino, so can be sent directly to it
+                 'backlight', 'get fan sleep', 'get climate', 'get sensor', 'get schedule']
 
-setterList = ['mintemp', 'maxtemp', 'minhum', 'maxhum', 'set sensor', 'ledon', 'ledoff']               # setters
+setterList = ['mintemp', 'maxtemp', 'minhum', 'maxhum', 'set sensor', 'ledon', 'ledoff']        # setters commands, which also can be sent directly to it
 
+schedule_settings = None
 climate_settings = None
 message_with_keyb = None
 last_setter = None
@@ -77,11 +89,12 @@ query_id = None
 
 def on_chat_message(msg):
     global climate_settings
+    global schedule_settings
     global message_with_keyb
     global last_setter
     content_type, chat_type, chat_id = telepot.glance(msg)
     if content_type == 'text':
-        message = msg['text'].lower()       # store user message for further parsing and not case-sensitive
+        message = msg['text'].lower()       # store user message for further parsing and make it not case-sensitive
         user = msg['from']['username']      # who send the command
 
         messageTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')              # store the time of received message
@@ -106,8 +119,14 @@ def on_chat_message(msg):
         elif message == u'\U0001f321' + ' get info':             # get temperature and humidity from arduino
             sensors = arduino.getInfo()
             bot.sendMessage(chat_id, "Temperature: {} Humidity: {}".format(sensors[0], sensors[1]) )
+
+        elif message == u'\u2600' + 'lighting schedule':
+            reply = arduino.sendCommand('get schedule')
+            message_with_keyb = bot.sendMessage(chat_id, reply, reply_markup=lightingKeyb)
+
         elif message == u'\u26fa' + ' facility operation':      # show facility control menu
             message_with_keyb = bot.sendMessage(chat_id,'Control facility with one click '+ u'\u2699', reply_markup=facilityKeyb)
+
         elif message == u'\U0001f326' + ' climate control':      # enter climate control manu
             message_with_keyb = bot.sendMessage(chat_id, 'Here you can control the climate' + u'\U0001f326', reply_markup=climateKeyb)
 
@@ -116,6 +135,14 @@ def on_chat_message(msg):
             reply = arduino.sendSetter(last_setter, message[0])     # send setter and numeric value to arduino
             bot.answerCallbackQuery(query_id, reply)                # show the user a result, received from arduino
             climate_settings = False                                # finish climate adjustment
+
+        elif schedule_settings and message.split('-')[0].isnumeric() and message.split('-')[1].isnumeric():
+            ledOn, ledOff = message.split('-')
+            reply = arduino.sendSetter('ledon', ledOn)
+            bot.sendMessage(chat_id, reply)
+            reply = arduino.sendSetter('ledOff', ledOff)
+            bot.sendMessage(chat_id, reply)
+
         else:
             bot.sendMessage(chat_id, 'Hmm.. I dont know this command. Try to use keyboard ;)', reply_markup=MainMenuKeyboard)
 
@@ -124,6 +151,7 @@ def on_callback_query(msg):
     query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
     print('\n' + "Query: {} "+'\n' + "From: {} " + 'Time: ' + '{}').format(query_data, from_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))        # print activity
     global climate_settings
+    global schedule_settings
     global message_with_keyb
     global last_setter
     global query_id
@@ -160,6 +188,10 @@ def on_callback_query(msg):
         climate_settings = True
         last_setter = query_data
         bot.sendMessage(from_id, 'How often should I update sensors?', reply_markup=sensorKeyb)
+    if query_data == 'changeSchedule':
+        schedule_settings = True
+        bot.sendMessage(from_id, 'Choose a schedule on keyboard, or write manually (24h format) eg. 11-22 (lights will work for this period of time)', reply_markup=lightingSchedKeyb)
+
 
 
 TOKEN = sys.argv[1]
