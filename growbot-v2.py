@@ -29,9 +29,9 @@ tip_msg = "Everything is built aroung sensor update cycle. Default time is 5 sec
 tip_msg += "should work, whether it is time for the Led to shine and whether the (de)humidifier should induce a mist." + "\n"
 tip_msg += "If you want to turn off the LED for some time (for example, for it not to shine in your eyes during some operations in tent) you can set a longer sensor update time, "
 tip_msg += "turn Led off in \"Facility\" section and do your thing. The same with the Fan, humidifier and LCD display." + "\n"
-tip_msg += "\nYou can also write commands directly to you bot at any time, without built-in keyboards. \nCurrently avalable commands are from \"Facility\" "
-tip_msg += "section only: led on, led off, fan on, fan off, fan sleep, alarm, backlight, get fan sleep, get climate, get sensor (not case sensitive)."
-
+tip_msg += "\nYou can also write commands directly to you bot at any time, without built-in keyboards. \nCurrently avalable commands are: "
+tip_msg += "led on, led off, fan on, fan off, fan sleep, alarm, backlight, get fan sleep, get climate, get sensor. And setter commands: mintemp, maxtemp, minhum, maxhum, set sensor, "
+tip_msg += "ledon, ledoff; followed by colon and a number for that setter. For example \"maxtemp:27\" will set maximal temperature to 27 and arduino will try to keep it."
 
 MainMenuKeyboard = ReplyKeyboardMarkup(one_time_keyboard=True, keyboard=[
                 [u'\U0001f321' + ' Get info'],
@@ -67,27 +67,26 @@ sensorKeyb = ReplyKeyboardMarkup(one_time_keyboard=True, keyboard=[
 
 commandsList = [ 'led on', 'led off', 'fan on', 'fan off', 'fan sleep', 'alarm',    # commands, which are understood by arduino, so can be sent directly to it
                  'backlight', 'get fan sleep', 'get climate', 'get sensor',]
-setterList = ['mintemp', 'maxtemp', 'minhum', 'maxhum', 'set sensor']               # setters
 
+setterList = ['mintemp', 'maxtemp', 'minhum', 'maxhum', 'set sensor', 'ledon', 'ledoff']               # setters
 
-deleteKeyb = ReplyKeyboardRemove()
+climate_settings = None
 message_with_keyb = None
-climate_settings = False
 last_setter = None
-
+query_id = None
 
 def on_chat_message(msg):
-    global climate_settings    # a flag to enter 2nd keyboard level
-    global last_setter          # var to remember last setter option bofore receiving it's value and sending them to arduino
+    global climate_settings
     global message_with_keyb
+    global last_setter
     content_type, chat_type, chat_id = telepot.glance(msg)
     if content_type == 'text':
-        message = msg['text']               # store user message for further parsing
+        message = msg['text'].lower()       # store user message for further parsing and not case-sensitive
         user = msg['from']['username']      # who send the command
 
         messageTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')              # store the time of received message
         logger = '\n' + "Command: {} " + '\n' + 'From: {} ' + 'Time: ' + '{}'   # prepare information for printing
-        print(logger).format(message.encode('utf-8'), user, messageTime)                        # print all commands received by bot
+        print(logger).format(message.encode('utf-8'), user, messageTime)        # print all commands received by bot
 
         if message.startswith('/start'):
             bot.sendMessage(chat_id, welcome_msg, reply_markup=MainMenuKeyboard)
@@ -96,43 +95,44 @@ def on_chat_message(msg):
         elif message.startswith('/tip'):
             bot.sendMessage(chat_id, tip_msg, reply_markup=MainMenuKeyboard)
 
-        elif message.lower() in commandsList:           # you can also write commands directly to bot, without built-in keyboard (not case sensitive)
-            climate_settings = False                    # prevent the user from staying with climateKeyboard, if issued a direct command to bot.
+        elif message in commandsList:                   # you can also write commands directly to bot, without built-in keyboard (not case sensitive)
             reply = arduino.sendCommand(message)        # sned command to arduino
-            bot.sendMessage(chat_id, reply, reply_markup=MainMenuKeyboard)  # return answer from arduino
+            bot.sendMessage(chat_id, reply, reply_markup=MainMenuKeyboard)      # return answer from arduino
+        elif ':' in message and message.split(':')[0] in setterList and message.split(':')[1].isnumeric():          # you cant write setter commands directly to bot too!
+            setter, setterVal = message.split(':')
+            reply = arduino.sendSetter(setter, setterVal)
+            bot.sendMessage(chat_id, reply, reply_markup=MainMenuKeyboard)
 
-        elif message == u'\U0001f321' + ' Get info':             # get temperature and humidity from arduino
+        elif message == u'\U0001f321' + ' get info':             # get temperature and humidity from arduino
             sensors = arduino.getInfo()
             bot.sendMessage(chat_id, "Temperature: {} Humidity: {}".format(sensors[0], sensors[1]) )
-        elif message == u'\u26fa' + ' Facility operation':   # show facility control menu
+        elif message == u'\u26fa' + ' facility operation':      # show facility control menu
             message_with_keyb = bot.sendMessage(chat_id,'Control facility with one click '+ u'\u2699', reply_markup=facilityKeyb)
-        elif message == u'\U0001f326' + ' Climate control':      # enter climate control manu
+        elif message == u'\U0001f326' + ' climate control':      # enter climate control manu
             message_with_keyb = bot.sendMessage(chat_id, 'Here you can control the climate' + u'\U0001f326', reply_markup=climateKeyb)
 
-        elif climate_settings:                  # if a user has choosen a 'setter' in Climate control menu - parse next message as a value for that setter
-            message = message.split('%')        # cut degree sign
-            if message[0].isnumeric():          # check if input is appropriate
-                reply = arduino.sendSetter(last_setter, message[0])     # send setter and numeric value to arduino
-                bot.answerCallbackQuery(query_id, reply)                # show the user a result, received from arduino
-                climate_settings = False        # finish climate adjustment
+        elif climate_settings and message.split('%')[0].isnumeric():
+            message = message.split('%')
+            reply = arduino.sendSetter(last_setter, message[0])     # send setter and numeric value to arduino
+            bot.answerCallbackQuery(query_id, reply)                # show the user a result, received from arduino
+            climate_settings = False                                # finish climate adjustment
         else:
             bot.sendMessage(chat_id, 'Hmm.. I dont know this command. Try to use keyboard ;)', reply_markup=MainMenuKeyboard)
 
 
 def on_callback_query(msg):
-    global climate_settings         # a flag to enter 2nd keyboard level
-    global last_setter              # var to remember last setter option bofore receiving it's value and sending them to arduino
-    global query_id                 # remember last inline keyboard sent, to hide it later
     query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
     print('\n' + "Query: {} "+'\n' + "From: {} " + 'Time: ' + '{}').format(query_data, from_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))        # print activity
-
+    global climate_settings
+    global message_with_keyb
+    global last_setter
+    global query_id
     if query_data in commandsList:              # send command (if appropriate) directly to arduino
         reply = arduino.sendCommand(query_data)
         bot.answerCallbackQuery(query_id, reply)
         climate_settings = False
 
     if query_data == 'main menu':        #hide last inline keyb and show main manu
-        global message_with_keyb
         if message_with_keyb:
             msg_idf = telepot.message_identifier(message_with_keyb)
             bot.editMessageText(msg_idf, 'Changed your mind?')
@@ -162,7 +162,7 @@ def on_callback_query(msg):
         bot.sendMessage(from_id, 'How often should I update sensors?', reply_markup=sensorKeyb)
 
 
-
+TOKEN = sys.argv[1]
 bot = telepot.Bot(TOKEN)
 MessageLoop(bot, {'chat': on_chat_message,
                   'callback_query': on_callback_query}).run_as_thread()
