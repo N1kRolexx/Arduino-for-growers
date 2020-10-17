@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import sys
 import time
@@ -78,6 +78,7 @@ def on_chat_message(msg):
 
         else:
             bot.sendMessage(chat_id, 'Unknown command. Please, use keyboard.', reply_markup=mainKeyboard)
+
 
 TOKEN = sys.argv[1]
 bot = telepot.Bot(TOKEN)
