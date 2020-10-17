@@ -1,10 +1,10 @@
-# Arduino for growers 
+# Arduino for growers
 
 This project allows for automation of growing processes and on-the-fly control and adjustment of your growing environment.
 
 Arduino is the heart of this project and is responsible for controlling relays and sensors. Raspbery Pi with a Telegram bot onboard is the brain, which controls Arduino through a serial connection.
 
-I decided to write this project to fulfill some of my needs as a grower a while ago. Then, after some amount of features had accumulated, I though this project could be useful for someone, who is growing indoors and would like to add some automation to their growing process :) 
+I decided to write this project to fulfill some of my needs as a grower a while ago. Then, after some amount of features had accumulated, I though this project could be useful for someone, who is growing indoors and would like to add some automation to their growing process :)
 
 Also, similar controllers, whilst not having same functionality, are pretty expensive on market, whereas this project would cost you nearly 60$ and even cheaper if order everything from China.
 
@@ -27,14 +27,14 @@ Also, similar controllers, whilst not having same functionality, are pretty expe
 - Bi-Directional Logic Level Converter 3.3v - 5v
 - 400 pin prototype board
 - Jumper Wires
-- 10kOhm resistor and 10μf capacitor 
+- 10kOhm resistor and 10μf capacitor
 
 ### Software
 - Python 3.8
 - Telepot - telegram bot library for python (https://github.com/nickoala/telepot)
 - PySerial - serial port access library for python (https://github.com/pyserial/pyserial)
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install dependencies 
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install dependencies
 
 ```bash
 pip install pyserial
@@ -49,9 +49,9 @@ sudo nohup python growbot-v2.py &
 ----
 ## Upcoming features & Plans
 - Soil moisture measurements & Automatic watering.
-- Smiles in bot's menu and keyboards.
+- Smiles in bot's menu and keyboards. ✓
 - CO2 measurements inside grow space.
-- Motion Sensor to detect movement near growbox.
+- Motion Sensor to detect movement near grow area.
 - RFID card access to your growing area.
 - Rewrite python bot using another library, because telepot is deprecated already.
 - Port everything to NodeMCU development board to get rid of Raspberry Pi and serial connection.
