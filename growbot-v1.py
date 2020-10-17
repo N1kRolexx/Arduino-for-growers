@@ -79,7 +79,7 @@ def on_chat_message(msg):
         else:
             bot.sendMessage(chat_id, 'Unknown command. Please, use keyboard.', reply_markup=mainKeyboard)
 
-
+TOKEN = sys.argv[1]
 bot = telepot.Bot(TOKEN)
 MessageLoop(bot, on_chat_message).run_as_thread()
 print ('Listening ...' + '\n')
