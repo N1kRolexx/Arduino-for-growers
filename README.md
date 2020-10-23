@@ -41,7 +41,7 @@ pip3 install telepot
 ## How to set everything up
 1. Connect all parts as shown on scheme.
 Remember to put 10kOhm resistor between VCC and DATA pins of DHT22 sensor. Also, put 10μf capacitor between RST and GND pins to avoid reset when serial port opens. I recommend using external breabdoard PSU to power everything.
-![](https://raw.githubusercontent.com/N1kRolexx/Arduino-for-growers/master/arduino-for-growers3_bb.png?token=AD6KLWXUI7Y5W22QEOLE42K7SL44Q)
+![](https://raw.githubusercontent.com/N1kRolexx/Arduino-for-growers/master/arduino-for-growers3_bb.png)
 2.  Open "arduino.py" and edit serial port address. Use python to determine correct address.
 ```python
 python -m serial.tools.list_ports
