@@ -4,10 +4,10 @@ import serial
 
 
 ser = serial.Serial()
-ser.baudrate = 115200           # should match arduino's sketch baudrate
-ser.port = '/dev/ttyAMA0'       # usual arduino port on Raspbian, use "python -m serial.tools.list_ports" to determine the port
-ser.timeout = 1                 # important for not to freeze the program, if some messages did not arrive,
-ser.open()                      # because arduino sends back info after every command
+ser.baudrate = 115200
+ser.port = '/dev/ttyAMA0'    # usual port on Raspbian, use "python -m serial.tools.list_ports" to determine the port
+ser.timeout = 1
+ser.open()
 
 def getInfo():
     ser.flushInput()
