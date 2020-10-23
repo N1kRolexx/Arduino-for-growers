@@ -7,9 +7,9 @@ DS3231  rtc(SDA, SCL);                  // you need to set current time on RTC, 
 DHT dht(7, DHT22);
 Time  t;
 
-#define Hum 3         // Humidifier relay pin
-#define Fan 4         // Fan relay pin
-#define LED 5         // Led relay pin
+#define Hum 2         // Humidifier relay pin
+#define Fan 3         // Fan relay pin
+#define LED 4         // Led relay pin
 
 bool backlightFlag = 1, fanSleep = 0;                      // flags
 long fanSleepingTime = 1800000;                            // default fan sleeping time: 30 minutes
@@ -188,6 +188,13 @@ void serialControl() {
     Serial.print(maxHum);
     Serial.println('%');
   }
+  else if (command.equalsIgnoreCase("get schedule")) {
+    Serial.print("Current lighting schedule is");
+    Serial.print(LedOn);
+    Serial.print(":00-");
+    Serial.print(LedOff);
+    Serial.println(":00");
+  }
 
   else if (command.indexOf(':') > 4) {
     serialParse();
@@ -211,7 +218,8 @@ void serialParse() {
     if ((setterVal < 25) && (setterVal > -1)) {
       LedOn = setterVal;
       Serial.print("Lights will turn on at ");
-      Serial.println(LedOn);
+      Serial.print(LedOn);
+      Serial.println(":00");
     }
     else {
       Serial.println("Incorrect value, please choose between 0-24");
@@ -221,7 +229,9 @@ void serialParse() {
     if ((setterVal < 25) && (setterVal > -1)) {
       LedOff = setterVal;
       Serial.print("Lights will turn off at ");
-      Serial.println(LedOff);
+      Serial.print(LedOff);
+      Serial.println(":00");
+
     }
     else {
       Serial.println("Incorrect value, please choose between 0-24");
