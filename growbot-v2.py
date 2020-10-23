@@ -3,7 +3,7 @@
 import sys
 import time
 import telepot
-import arduinotest as arduino
+import arduino
 from datetime import datetime
 from telepot.loop import MessageLoop
 from telepot.namedtuple import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
