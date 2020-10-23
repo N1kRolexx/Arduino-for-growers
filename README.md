@@ -42,18 +42,18 @@ pip3 install telepot
 1. Connect all parts as shown on scheme.
 Remember to put 10kOhm resistor between VCC and DATA pins of DHT22 sensor. Also, put 10μf capacitor between RST and GND pins to avoid reset when serial port opens. I recommend using external breabdoard PSU to power everything.
 ![](https://raw.githubusercontent.com/N1kRolexx/Arduino-for-growers/master/arduino-for-growers3_bb.png)
-2.  Open "arduino.py" and edit serial port address. Use python to determine correct address.
+2.  Open 'arduino.py' and edit serial port address. Use python to determine correct address.
 ```python
 python -m serial.tools.list_ports
 ```
 
-3.  Then write '/start' to your Growbot!
-
-## Usage
-To start bot in the background and suppress output:
+3. To start bot in the background and suppress output:
 ```bash
 nohup python growbot-v2.py your_bot_token &
 ```
+
+4.  Then write '/start' to your Growbot and enjoy!
+
 ------------
 ## Upcoming features & Plans
 - Soil moisture measurements & Automatic watering.
